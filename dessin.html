@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Éditeur avec Dessin</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            background-color: #f5f5f5;
+        }
+        .container {
+            width: 85%;
+            max-width: 1200px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            height: 90vh;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        .toolbar label, .toolbar select, .toolbar input {
+            margin-right: 15px;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            display: block;
+            width: 100%;
+            height: 700px;
+            margin-top: 20px;
+            cursor: crosshair;
+        }
+        .export-btn {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .page-content {
+            padding: 20px;
+            border: 1px solid #ccc;
+            margin-bottom: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            position: relative;
+        }
+        .image-options {
+            display: flex;
+            flex-direction: column;
+        }
+        .image-options input {
+            margin-bottom: 10px;
+        }
+        .page-btns {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .page-btns button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .page-btns button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Éditeur de Dessin</h1>
+        
+        <div class="toolbar">
+            <div>
+                <label for="hta-menu">HTA :</label>
+                <select id="hta-menu">
+                    <option value="red-dotted">Pointillés rouges</option>
+                    <option value="red-line">Lignes rouges</option>
+                    <option value="orange-dotted">Pointillés orange</option>
+                    <option value="orange-line">Lignes orange</option>
+                    <option value="black-line">Lignes noires</option>
+                    <option value="black-dotted">Pointillés noirs</option>
+                </select>
+            </div>
+            <div>
+                <label for="bt-menu">BT :</label>
+                <select id="bt-menu">
+                    <option value="blue-dotted">Pointillés bleus</option>
+                    <option value="green-dotted">Pointillés verts</option>
+                    <option value="darkblue-dotted">Pointillés bleu foncé</option>
+                    <option value="black-dotted">Pointillés noirs</option>
+                    <option value="darkblue-line">Lignes bleu foncé</option>
+                </select>
+            </div>
+            <div>
+                <label for="image-upload">Télécharger une image :</label>
+                <input type="file" id="image-upload" accept="image/*">
+            </div>
+        </div>
+
+        <div class="export-btn">
+            <button id="add-page">Ajouter une nouvelle page</button>
+            <button id="toggle-mode">Mode Ajustement Image</button>
+        </div>
+
+        <div id="pages-container"></div>
+    </div>
+
+    <script>
+        const addPageButton = document.getElementById('add-page');
+        const pagesContainer = document.getElementById('pages-container');
+        const htaMenu = document.getElementById('hta-menu');
+        const btMenu = document.getElementById('bt-menu');
+        const imageUpload = document.getElementById('image-upload');
+        const toggleModeButton = document.getElementById('toggle-mode');
+
+        let imageWidth = 200;
+        let imageHeight = 200;
+        let imageX = 0;
+        let imageY = 0;
+        let image = null;
+        let isInImageMode = false; // Variable pour basculer entre le mode dessin et le mode ajustement de l'image
+        let isDragging = false;
+        let isResizing = false;
+        let dragStartX, dragStartY;
+        let resizeStartX, resizeStartY;
+
+        // Fonction pour créer une nouvelle page
+        function createPage() {
+            const newPage = document.createElement('div');
+            newPage.classList.add('page-content');
+
+            const newCanvas = document.createElement('canvas');
+            newCanvas.width = 1200;
+            newCanvas.height = 800;
+            const newCtx = newCanvas.getContext('2d');
+
+            const imageOptions = document.createElement('div');
+            imageOptions.classList.add('image-options');
+
+            const addImageButton = document.createElement('button');
+            addImageButton.textContent = 'Ajouter une image';
+            addImageButton.onclick = () => {
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.accept = 'image/*';
+                fileInput.onchange = (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        const img = new Image();
+                        img.onload = () => {
+                            newCtx.clearRect(0, 0, newCanvas.width, newCanvas.height);
+                            image = img;
+                            drawImage(newCtx, img);
+                        };
+                        img.src = URL.createObjectURL(file);
+                    }
+                };
+                fileInput.click();
+            };
+
+            const deletePageButton = document.createElement('button');
+            deletePageButton.textContent = 'Supprimer la page';
+            deletePageButton.onclick = () => {
+                pagesContainer.removeChild(newPage);
+            };
+
+            imageOptions.appendChild(addImageButton);
+            imageOptions.appendChild(deletePageButton);
+
+            newPage.appendChild(imageOptions);
+            newPage.appendChild(newCanvas);
+            pagesContainer.appendChild(newPage);
+
+            let isDrawing = false;
+            let startX, startY, currentX, currentY;
+
+            // Dessiner sur le canvas de la page
+            newCanvas.addEventListener('click', (e) => {
+                if (!isInImageMode) { // Si nous sommes en mode dessin
+                    const rect = newCanvas.getBoundingClientRect();
+                    const offsetX = e.clientX - rect.left;  // Calculer la position par rapport au canvas
+                    const offsetY = e.clientY - rect.top;   // Calculer la position par rapport au canvas
+
+                    currentX = offsetX;
+                    currentY = offsetY;
+
+                    if (!isDrawing) {
+                        startX = currentX;
+                        startY = currentY;
+                        isDrawing = true;
+                    } else {
+                        newCtx.beginPath();
+                        // Définir le style du trait selon l'option choisie dans le menu
+                        switch (htaMenu.value) {
+                            case 'red-dotted':
+                                newCtx.setLineDash([5, 15]);
+                                newCtx.strokeStyle = 'red';
+                                break;
+                            case 'red-line':
+                                newCtx.setLineDash([]);
+                                newCtx.strokeStyle = 'red';
+                                break;
+                            case 'orange-dotted':
+                                newCtx.setLineDash([5, 15]);
+                                newCtx.strokeStyle = 'orange';
+                                break;
+                            case 'orange-line':
+                                newCtx.setLineDash([]);
+                                newCtx.strokeStyle = 'orange';
+                                break;
+                            case 'black-line':
+                                newCtx.setLineDash([]);
+                                newCtx.strokeStyle = 'black';
+                                break;
+                            case 'black-dotted':
+                                newCtx.setLineDash([5, 15]);
+                                newCtx.strokeStyle = 'black';
+                                break;
+                            case 'blue-dotted':
+                                newCtx.setLineDash([5, 15]);
+                                newCtx.strokeStyle = 'blue';
+                                break;
+                            case 'green-dotted':
+                                newCtx.setLineDash([5, 15]);
+                                newCtx.strokeStyle = 'green';
+                                break;
+                            case 'darkblue-dotted':
+                                newCtx.setLineDash([5, 15]);
+                                newCtx.strokeStyle = 'darkblue';
+                                break;
+                            case 'darkblue-line':
+                                newCtx.setLineDash([]);
+                                newCtx.strokeStyle = 'darkblue';
+                                break;
+                        }
+                        newCtx.moveTo(startX, startY);
+                        newCtx.lineTo(currentX, currentY);
+                        newCtx.stroke();
+
+                        startX = currentX;
+                        startY = currentY;
+                    }
+                }
+            });
+
+            // Fonction pour dessiner l'image
+            function drawImage(ctx, img) {
+                ctx.drawImage(img, imageX, imageY, imageWidth, imageHeight);
+            }
+
+            // Mode Ajustement d'image ou dessin
+            toggleModeButton.addEventListener('click', () => {
+                isInImageMode = !isInImageMode;
+                toggleModeButton.textContent = isInImageMode ? "Mode Dessin" : "Mode Ajustement Image";
+                document.body.style.cursor = isInImageMode ? 'move' : 'crosshair';
+            });
+
+            // Fonction pour déplacer l'image
+            newCanvas.addEventListener('mousedown', (e) => {
+                if (isInImageMode && image) {
+                    const rect = newCanvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    if (mouseX >= imageX && mouseX <= imageX + imageWidth && mouseY >= imageY && mouseY <= imageY + imageHeight) {
+                        isDragging = true;
+                        dragStartX = mouseX - imageX;
+                        dragStartY = mouseY - imageY;
+                        newCanvas.style.cursor = 'move';
+                    }
+                }
+            });
+
+            // Fonction pour déplacer l'image
+            newCanvas.addEventListener('mousemove', (e) => {
+                if (isDragging && image) {
+                    const rect = newCanvas.getBoundingClientRect();
+                    const mouseX = e.clientX - rect.left;
+                    const mouseY = e.clientY - rect.top;
+
+                    imageX = mouseX - dragStartX;
+                    imageY = mouseY - dragStartY;
+
+                    newCtx.clearRect(0, 0, newCanvas.width, newCanvas.height);
+                    drawImage(newCtx, image);
+                }
+            });
+
+            newCanvas.addEventListener('mouseup', () => {
+                isDragging = false;
+                newCanvas.style.cursor = 'crosshair';
+            });
+
+            // Ajouter la page
+            pagesContainer.appendChild(newPage);
+        }
+
+        addPageButton.addEventListener('click', createPage);
+
+        // Créer une page initiale
+        createPage();
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Créer ou Supprimer un Utilisateur</title>
+    <link rel="stylesheet" href="user_management.css">
+</head>
+<body>
+    <div class="user-management-container">
+        <!-- Une seule section Gestion des utilisateurs -->
+        <h2>Gestion des Utilisateurs</h2>
+
+        <!-- Formulaire de création d'utilisateur -->
+        <div class="form-container" id="createFormContainer">
+            <h3>Créer un nouvel utilisateur</h3>
+            <form id="createForm" action="user_management.php" method="POST" onsubmit="return submitCreateForm(event)">
+                <div class="input-group">
+                    <label for="new_username">Nom d'utilisateur</label>
+                    <input type="text" id="new_username" name="new_username" placeholder="Entrez un nom d'utilisateur" required>
+                </div>
+                <div class="input-group">
+                    <label for="new_password">Mot de passe</label>
+                    <input type="password" id="new_password" name="new_password" placeholder="Entrez un mot de passe" required>
+                </div>
+                <div class="input-group">
+                    <label for="confirm_password">Confirmer le mot de passe</label>
+                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Confirmez le mot de passe" required>
+                </div>
+                <button type="submit" class="btn">Créer l'utilisateur</button>
+            </form>
+        </div>
+
+        <!-- Afficher la liste des utilisateurs -->
+        <div id="user-list-container">
+            <!-- Les utilisateurs seront ajoutés ici après leur création -->
+        </div>
+
+        <!-- Formulaire de suppression d'utilisateur -->
+        <div class="form-container" id="deleteFormContainer" style="display: none;">
+            <h3>Supprimer un utilisateur</h3>
+            <form id="deleteForm" onsubmit="return submitDeleteForm(event)">
+                <div class="input-group">
+                    <label for="delete_username">Nom d'utilisateur à supprimer</label>
+                    <input type="text" id="delete_username" name="delete_username" placeholder="Entrez un nom d'utilisateur" required>
+                </div>
+                <button type="submit" class="btn">Supprimer l'utilisateur</button>
+            </form>
+        </div>
+
+        <hr>
+
+        <div class="error-message" id="error-message"></div>
+    </div>
+
+    <script src="user_management.js"></script>
+</body>
+</html>

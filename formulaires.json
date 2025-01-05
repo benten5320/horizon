@@ -1,0 +1,30 @@
+[
+    {
+        "utilisateur": "john_doe",
+        "nom_dossier": "Projet Alpha",
+        "numero_affaire": "12345",
+        "adresse": "123 Rue Exemple",
+        "telephone": "0123456789",
+        "email": "john.doe@example.com",
+        "puissance_projet": 100,
+        "irve": "oui",
+        "en_ag": "non",
+        "branchement": "simple",
+        "date_creation": "2024-12-21 12:00:00",
+        "categorie": "Nouveau"
+    },
+    {
+        "utilisateur": "jane_smith",
+        "nom_dossier": "Projet Beta",
+        "numero_affaire": "67890",
+        "adresse": "456 Avenue Exemple",
+        "telephone": "0987654321",
+        "email": "jane.smith@example.com",
+        "puissance_projet": 200,
+        "irve": "non",
+        "en_ag": "oui",
+        "branchement": "departdirect",
+        "date_creation": "2024-12-21 12:30:00",
+        "categorie": "En cours"
+    }
+]

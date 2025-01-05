@@ -1,0 +1,12 @@
+{
+    "database": {
+        "host": "localhost",
+        "user": "root",
+        "password": "password",
+        "dbname": "tableau_de_bord_db"
+    },
+    "app": {
+        "debug": true,
+        "log_errors": true
+    }
+}
